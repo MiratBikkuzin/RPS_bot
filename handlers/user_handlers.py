@@ -1,6 +1,6 @@
 from models.methods import execute_query
 from models.db_queries import *
-from keyboards import game_keyboard, subjects_keyboard
+from keyboards.keyboards import game_keyboard, subjects_keyboard
 from lexicon.ru_lexicon_funcs import *
 from lexicon.lexicon_ru import LEXICON_RU, OPPOSITE_SUBJECTS_RU
 from emojize import game_emo, user_places_emo, score_emo, win_rate_emo, winner_cup_emo

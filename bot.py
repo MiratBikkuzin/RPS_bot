@@ -1,6 +1,8 @@
 from config_data.config import Config, load_config
 from handlers import user_handlers, other_handlers
 from models.methods import db_connection
+from keyboards.set_menu import set_main_menu
+
 from aiogram import Bot, Dispatcher
 import asyncio
 
@@ -8,8 +10,10 @@ import asyncio
 async def main() -> None:
 
     config: Config = load_config()
-    bot: Bot = Bot(config.tg_bot.bot_token)
+    bot: Bot = Bot(config.tg_bot.bot_token, parse_mode='HTML')
     dp: Dispatcher = Dispatcher()
+
+    await set_main_menu(bot)
 
     dp.include_router(user_handlers.router)
     dp.include_router(other_handlers.router)
