@@ -11,6 +11,10 @@ def reply_play_command() -> str:
     return f"Игра началась! Твой ход первый! Выбирай камень, ножницы или бумагу ⬇️"
 
 
+def reply_not_start() -> str:
+    return 'Хорошо. Если, вдруг, захочешь сыграть - нажми /play'
+
+
 def reply_statistic_command(full_name: str, total_games: int, wins: int,
                             game_score: int, win_rate: str, emoticons: tuple[str]) -> str:
     

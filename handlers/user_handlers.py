@@ -1,12 +1,12 @@
 from models.methods import execute_query
 from models.db_queries import *
-from keyboards import start_game_keyboard, subjects_keyboard
+from keyboards import game_keyboard, subjects_keyboard
 from lexicon.ru_lexicon_funcs import *
 from lexicon.lexicon_ru import LEXICON_RU, OPPOSITE_SUBJECTS_RU
 from emojize import game_emo, user_places_emo, score_emo, win_rate_emo, winner_cup_emo
 
 from aiogram.filters import Command, CommandStart, MEMBER, KICKED, ChatMemberUpdatedFilter
-from aiogram.types import Message, ChatMemberUpdated
+from aiogram.types import Message, ChatMemberUpdated, ReplyKeyboardRemove
 from aiogram import Router
 from random import choice
 
@@ -16,7 +16,7 @@ router: Router = Router(name='Router1')
 
 @router.message(CommandStart())
 async def proccess_start_command(message: Message) -> None:
-    
+
     user_id: int = message.from_user.id
     firstname: str = message.from_user.first_name
     old_user: bool = True
@@ -25,13 +25,11 @@ async def proccess_start_command(message: Message) -> None:
         old_user: bool = False
         await execute_query(add_user_query, 'INSERT',
                             user_id, message.from_user.username, firstname, 0, 0, 0, '100%', 'Active')
-        
+
     await message.answer(
         text=reply_start_command(firstname, old_user),
-        reply_markup=start_game_keyboard
+        reply_markup=game_keyboard
     )
-        
-        
 
 
 @router.message(Command(commands=['play']))
@@ -40,6 +38,14 @@ async def proccess_play_command(message: Message) -> None:
     await message.answer(
         text=reply_play_command(),
         reply_markup=subjects_keyboard
+    )
+
+
+@router.message(lambda x: 'не хочу' in x.text.lower())
+async def proccess_not_start(message: Message) -> None:
+    await message.answer(
+        text=reply_not_start(),
+        reply_markup=ReplyKeyboardRemove()
     )
 
 
@@ -56,44 +62,50 @@ async def process_subject_message(message: Message) -> None:
             text='Ничья! Продолжаем дальше!'
         )
         return
-    
+
     total_games, wins, _, _ = await execute_query(select_game_info_query, 'SELECT', user_id)
-    
+
     if OPPOSITE_SUBJECTS_RU[user_subject] == random_subject:
         increase_wins: int = 0
         increase_game_score: int = -500
         win_rate: str = str(round((wins / (total_games + 1)) * 100)) + '%'
-        answer_text: str = f'{random_subject}' \
-                            'Я выйграл!'        
+        answer_text: str = f'{random_subject} ' \
+            'Я выйграл!'
 
     else:
         increase_wins: int = 1
         increase_game_score: int = 1000
-        win_rate: str = str(round(((wins + 1) / (total_games + 1)) * 100)) + '%'
-        answer_text: str = f'{random_subject}' \
-                            'Я проиграл😢'
-        
+        win_rate: str = str(
+            round(((wins + 1) / (total_games + 1)) * 100)) + '%'
+        answer_text: str = f'{random_subject} ' \
+            'Я проиграл😢'
+
     await execute_query(update_user_info_query, 'UPDATE',
                         increase_wins, increase_game_score, win_rate, user_id)
-    await message.answer(answer_text)
+    await message.answer(
+        text=f'{answer_text} Сыграем ещё раз?',
+        reply_markup=game_keyboard
+    )
 
 
 @router.message(Command(commands=['statistic']))
 async def proccess_statistic_command(message: Message) -> None:
-    
-    emoticons: tuple[str, str] = (game_emo, winner_cup_emo, score_emo, win_rate_emo)
+
+    emoticons: tuple[str, str] = (
+        game_emo, winner_cup_emo, score_emo, win_rate_emo)
     fullname: str = message.from_user.full_name
     total_games, wins, game_score, win_rate = await execute_query(select_game_info_query, 'SELECT',
                                                                   message.from_user.id)
-    
+
     await message.answer(
-        text=reply_statistic_command(fullname, total_games, wins, game_score, win_rate, emoticons)
+        text=reply_statistic_command(
+            fullname, total_games, wins, game_score, win_rate, emoticons)
     )
 
 
 @router.message(Command(commands=['myplace']))
 async def proccess_place_command(message: Message) -> None:
-    
+
     user_place: int = int((await execute_query(select_user_place_query, 'SELECT', message.from_user.id))[0])
 
     await message.answer(
@@ -105,7 +117,7 @@ async def proccess_place_command(message: Message) -> None:
 async def proccess_kicked_user(event: ChatMemberUpdated) -> None:
     await execute_query(rename_status_user_query, 'UPDATE',
                         'Inactive', event.from_user.id)
-    
+
 
 @router.my_chat_member(ChatMemberUpdatedFilter(MEMBER))
 async def proccess_member_user(event: ChatMemberUpdated) -> None:

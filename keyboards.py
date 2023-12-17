@@ -5,6 +5,9 @@ from lexicon.lexicon_ru import LEXICON_RU
 start_game_btn: KeyboardButton = KeyboardButton(
     text=LEXICON_RU['start game']
 )
+not_start_btn: KeyboardButton = KeyboardButton(
+    text=LEXICON_RU['not_start']
+)
 rock_btn: KeyboardButton = KeyboardButton(
     text=LEXICON_RU['rock']
 )
@@ -24,7 +27,7 @@ subjects_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
 )
 
 
-start_game_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
-    keyboard=[[start_game_btn]],
+game_keyboard: ReplyKeyboardMarkup = ReplyKeyboardMarkup(
+    keyboard=[[start_game_btn, not_start_btn]],
     resize_keyboard=True
 )
